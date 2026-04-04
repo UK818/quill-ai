@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { Analytics } from "@vercel/analytics/react";
 
 // ═══════════════════════════════════════════════════════
 // DOMAIN — Constants & Configuration
@@ -662,12 +663,12 @@ export default function App() {
   const goHome=()=>{ reset(); setView("landing"); };
   const goWizard=()=>{ reset(); setView("wizard"); };
 
-  if(view==="landing")    return <LandingView   onStart={m=>{setMode(m);setView("wizard");}} onAdmin={()=>setView("adminLogin")} />;
-  if(view==="wizard")     return <WizardView    mode={mode} onComplete={handleWizardComplete} onBack={goHome} />;
-  if(view==="generating"||loading) return <LoadingView mode={formData?.mode||mode} />;
-  if(view==="result"&&result)      return <ResultView result={result} form={formData} onNew={goWizard} />;
-  if(view==="adminLogin") return <AdminLoginView onLogin={()=>setView("admin")} onBack={goHome} />;
-  if(view==="admin")      return <AdminDashboard onLogout={goHome} />;
-  if(error) return <div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:20,padding:20}}><div style={{fontSize:46}}>⚠️</div><p style={{color:"#FF6B6B",fontFamily:"'Plus Jakarta Sans',sans-serif",textAlign:"center"}}>{error}</p><Btn onClick={goWizard}>← Try Again</Btn></div>;
-  return null;
+  if(view==="landing")    return <><LandingView   onStart={m=>{setMode(m);setView("wizard");}} onAdmin={()=>setView("adminLogin")} /><Analytics /></>;
+  if(view==="wizard")     return <><WizardView    mode={mode} onComplete={handleWizardComplete} onBack={goHome} /><Analytics /></>;
+  if(view==="generating"||loading) return <><LoadingView mode={formData?.mode||mode} /><Analytics /></>;
+  if(view==="result"&&result)      return <><ResultView result={result} form={formData} onNew={goWizard} /><Analytics /></>;
+  if(view==="adminLogin") return <><AdminLoginView onLogin={()=>setView("admin")} onBack={goHome} /><Analytics /></>;
+  if(view==="admin")      return <><AdminDashboard onLogout={goHome} /><Analytics /></>;
+  if(error) return <><div style={{minHeight:"100vh",background:C.bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:20,padding:20}}><div style={{fontSize:46}}>⚠️</div><p style={{color:"#FF6B6B",fontFamily:"'Plus Jakarta Sans',sans-serif",textAlign:"center"}}>{error}</p><Btn onClick={goWizard}>← Try Again</Btn></div><Analytics /></>;
+  return <Analytics />;
 }
