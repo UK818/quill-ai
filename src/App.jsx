@@ -148,34 +148,53 @@ MANDATORY: metacognitive priming, hierarchical instruction structure, ${chainOfT
 Return ONLY valid JSON: {"prompt":"...","title":"max 6 words","tips":["tip1","tip2","tip3"],"whyItWorks":"one sentence","complexity":"advanced","technique":"${technique||"cot"}"}`;
   },
 
+  // ─────────────────────────────────────────────────────
+// REPLACE the existing generate() method inside
+// PromptGeneratorService in your src/App.jsx
+// with this version.
+// ─────────────────────────────────────────────────────
+
   async generate(inputs) {
     const system = this.buildSystem(inputs);
     const { category, goal, audience, tool, tone, outputFormat, constraints, mode } = inputs;
 
-    // Reads API key from environment variable (set in .env file)
-    const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+    const userMsg = `Category: ${category}
+Goal: ${goal}
+Audience: ${audience || "general audience"}
+Tool: ${tool || "any AI tool"}
+Tone: ${tone}
+${outputFormat ? `Output Format: ${outputFormat}` : ""}
+${constraints ? `Constraints: ${constraints}` : ""}
+Expertise Level: ${mode}`;
 
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    // Calls your Vercel serverless function — NOT Anthropic directly
+    const res = await fetch("/api/generate", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1200,
         system,
-        messages: [{ role: "user", content: `Category: ${category}\nGoal: ${goal}\nAudience: ${audience||"general"}\nTool: ${tool||"any"}\nTone: ${tone}${outputFormat?`\nFormat: ${outputFormat}`:""}${constraints?`\nConstraints: ${constraints}`:""}` }],
+        messages: [{ role: "user", content: userMsg }],
       }),
     });
 
-    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Request failed: ${res.status}`);
+    }
+
     const data = await res.json();
     const raw = data.content?.[0]?.text || "{}";
-    try { return JSON.parse(raw.replace(/```json|```/g, "").trim()); }
-    catch { return { prompt: raw, title: "Your Prompt", tips: [], whyItWorks: "", complexity: mode === "expert" ? "advanced" : "intermediate" }; }
+    try {
+      return JSON.parse(raw.replace(/```json|```/g, "").trim());
+    } catch {
+      return {
+        prompt: raw,
+        title: "Your Prompt",
+        tips: [],
+        whyItWorks: "",
+        complexity: inputs.mode === "expert" ? "advanced" : "intermediate",
+      };
+    }
   },
 };
 
