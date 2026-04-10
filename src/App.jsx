@@ -186,10 +186,7 @@ Return ONLY valid JSON: {"prompt":"...","title":"max 6 words","tips":["tip1","ti
     const res = await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        system,
-        messages: [{ role: "user", content: `Category: ${category}\nGoal: ${goal}\nAudience: ${audience||"general"}\nTool: ${tool||"any"}\nTone: ${tone}${outputFormat?`\nFormat: ${outputFormat}`:""}${constraints?`\nConstraints: ${constraints}`:""}` }],
-      }),
+      body: JSON.stringify({ system, messages }),
     });
     if (!res.ok) throw new Error(`API error: ${res.status}`);
     const data = await res.json();
