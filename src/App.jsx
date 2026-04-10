@@ -183,16 +183,33 @@ Return ONLY valid JSON: {"prompt":"...","title":"max 6 words","tips":["tip1","ti
   async generate(inputs) {
     const system = this.buildSystem(inputs);
     const { category, goal, audience, tool, tone, outputFormat, constraints, mode } = inputs;
+  
+    const userMsg = `Category: ${category}
+    Goal: ${goal}
+    Audience: ${audience || "general audience"}
+    Tool: ${tool || "any AI tool"}
+    Tone: ${tone}
+    ${outputFormat ? `Output Format: ${outputFormat}` : ""}
+    ${constraints ? `Constraints: ${constraints}` : ""}
+    Expertise Level: ${mode}`;
+  
     const res = await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ system, messages }),
+      body: JSON.stringify({
+        system,
+        messages: [{ role: "user", content: userMsg }],
+      }),
     });
+  
     if (!res.ok) throw new Error(`API error: ${res.status}`);
     const data = await res.json();
     const raw = data.content?.[0]?.text || "{}";
-    try { return JSON.parse(raw.replace(/```json|```/g,"").trim()); }
-    catch { return { prompt: raw, title: "Your Prompt", tips: [], whyItWorks: "", complexity: mode==="expert"?"advanced":"intermediate" }; }
+    try {
+      return JSON.parse(raw.replace(/```json|```/g, "").trim());
+    } catch {
+      return { prompt: raw, title: "Your Prompt", tips: [], whyItWorks: "", complexity: mode === "expert" ? "advanced" : "intermediate" };
+    }
   },
 };
 
